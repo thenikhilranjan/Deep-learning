@@ -113,9 +113,11 @@ This script will verify:
 - `requirements.txt` - Python package dependencies
 - `setup.sh` - Automated setup script for Python environment
 - `setup_git.sh` - Automated setup script for Git configuration
+- `connect_github.sh` - Interactive script to connect to GitHub
 - `check_environment.py` - Environment verification script
 - `.gitignore` - Git ignore patterns for Python projects
 - `GIT_SETUP.md` - Detailed Git setup and usage guide
+- `GITHUB_SETUP.md` - GitHub connection guide
 - `README.md` - This file
 
 ## Next Steps
@@ -143,3 +145,26 @@ This script will verify:
 ✅ Git repository initialized  
 ✅ Initial commit created  
 ⚠️  Git user identity needs to be configured (run `bash setup_git.sh`)
+
+## Connect to GitHub
+
+### Quick Setup
+
+Run the interactive script to connect your repository to GitHub:
+```bash
+bash connect_github.sh
+```
+
+### Manual Connection
+
+1. **Create a repository on GitHub** at https://github.com/new
+2. **Add the remote:**
+   ```bash
+   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+   ```
+3. **Push your code:**
+   ```bash
+   git push -u origin main
+   ```
+
+See `GITHUB_SETUP.md` for detailed instructions and troubleshooting.
