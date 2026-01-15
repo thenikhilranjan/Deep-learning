@@ -51,6 +51,50 @@ def check_python_packages():
     
     return all_installed
 
+def check_git_config():
+    """Check Git configuration and repository status."""
+    print("\n🔧 Checking Git configuration:")
+    git_configured = True
+    
+    # Check user name
+    try:
+        result = subprocess.run(['git', 'config', '--global', 'user.name'],
+                              capture_output=True, text=True, timeout=5)
+        if result.returncode == 0 and result.stdout.strip():
+            print(f"✅ Git user name: {result.stdout.strip()}")
+        else:
+            print("⚠️  Git user name: Not configured")
+            git_configured = False
+    except Exception:
+        print("⚠️  Git user name: Not configured")
+        git_configured = False
+    
+    # Check user email
+    try:
+        result = subprocess.run(['git', 'config', '--global', 'user.email'],
+                              capture_output=True, text=True, timeout=5)
+        if result.returncode == 0 and result.stdout.strip():
+            print(f"✅ Git user email: {result.stdout.strip()}")
+        else:
+            print("⚠️  Git user email: Not configured")
+            git_configured = False
+    except Exception:
+        print("⚠️  Git user email: Not configured")
+        git_configured = False
+    
+    # Check if repository is initialized
+    try:
+        result = subprocess.run(['git', 'rev-parse', '--git-dir'],
+                              capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            print("✅ Git repository: Initialized")
+        else:
+            print("⚠️  Git repository: Not initialized")
+    except Exception:
+        print("⚠️  Git repository: Not initialized")
+    
+    return git_configured
+
 def main():
     print("🔍 Development Environment Check\n")
     print("=" * 50)
@@ -75,11 +119,16 @@ def main():
     # Check Python packages
     packages_ok = check_python_packages()
     
+    # Check Git configuration
+    git_configured = check_git_config()
+    
     # Summary
     print("\n" + "=" * 50)
     print("\n📊 Summary:")
     
-    if all_tools_ok and packages_ok:
+    all_ok = all_tools_ok and packages_ok and git_configured
+    
+    if all_ok:
         print("✅ All checks passed! Your environment is ready.")
         return 0
     else:
@@ -88,6 +137,11 @@ def main():
             print("\n💡 To fix missing tools:")
             print("   1. Install Xcode Command Line Tools: xcode-select --install")
             print("   2. Install Python packages: pip3 install -r requirements.txt")
+        if not git_configured:
+            print("\n💡 To configure Git:")
+            print("   Run: bash setup_git.sh")
+            print("   Or manually: git config --global user.name 'Your Name'")
+            print("                git config --global user.email 'your.email@example.com'")
         return 1
 
 if __name__ == '__main__':

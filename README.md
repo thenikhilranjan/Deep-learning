@@ -4,12 +4,16 @@
 
 ### ✅ Available
 - Python 3 (located at `/usr/bin/python3`)
+- Git (version 2.50.1) - ✅ Repository initialized
+- Git repository initialized with initial commit
 
 ### ⚠️ Needs Installation
-- Xcode Command Line Tools (required for Python, pip, git, and other development tools)
+- Xcode Command Line Tools (required for Python, pip, and other development tools)
 - pip (Python package manager)
-- git (version control)
 - Homebrew (optional, but recommended package manager for macOS)
+
+### ⚠️ Needs Configuration
+- Git user name and email (see Git Setup below)
 
 ## Setup Instructions
 
@@ -44,12 +48,22 @@ python3 -m pip install --upgrade pip
 pip3 install -r requirements.txt
 ```
 
-### 5. Install Git (if not already installed)
+### 5. Configure Git
 
-Git usually comes with Xcode tools, but you can verify:
+Git is already installed and the repository is initialized! However, you should configure your identity:
+
+**Quick setup:**
 ```bash
-git --version
+bash setup_git.sh
 ```
+
+**Manual configuration:**
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+```
+
+See `GIT_SETUP.md` for detailed Git setup instructions.
 
 ### 6. Optional: Install Homebrew
 
@@ -97,14 +111,35 @@ This script will verify:
 ## Files Created
 
 - `requirements.txt` - Python package dependencies
-- `setup.sh` - Automated setup script
+- `setup.sh` - Automated setup script for Python environment
+- `setup_git.sh` - Automated setup script for Git configuration
 - `check_environment.py` - Environment verification script
 - `.gitignore` - Git ignore patterns for Python projects
+- `GIT_SETUP.md` - Detailed Git setup and usage guide
 - `README.md` - This file
 
 ## Next Steps
 
-1. Install Xcode Command Line Tools: `xcode-select --install`
-2. Run setup script: `bash setup.sh`
-3. Verify environment: `python3 check_environment.py`
-4. Start coding!
+1. **Configure Git identity** (recommended):
+   ```bash
+   bash setup_git.sh
+   ```
+   Or manually:
+   ```bash
+   git config --global user.name "Your Name"
+   git config --global user.email "your.email@example.com"
+   ```
+
+2. **Install Xcode Command Line Tools**: `xcode-select --install`
+
+3. **Run Python setup script**: `bash setup.sh`
+
+4. **Verify environment**: `python3 check_environment.py`
+
+5. **Start coding!**
+
+## Git Repository Status
+
+✅ Git repository initialized  
+✅ Initial commit created  
+⚠️  Git user identity needs to be configured (run `bash setup_git.sh`)
