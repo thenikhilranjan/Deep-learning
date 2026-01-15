@@ -63,7 +63,7 @@ git config --global user.name "Your Name"
 git config --global user.email "your.email@example.com"
 ```
 
-See `GIT_SETUP.md` for detailed Git setup instructions.
+**Note:** Configure your Git identity before making commits.
 
 ### 6. Optional: Install Homebrew
 
@@ -108,17 +108,12 @@ This script will verify:
 - Git installation
 - Essential Python packages (pytest, black, flake8)
 
-## Files Created
+## Project Files
 
 - `requirements.txt` - Python package dependencies
 - `setup.sh` - Automated setup script for Python environment
-- `setup_git.sh` - Automated setup script for Git configuration
-- `connect_github.sh` - Interactive script to connect to GitHub
 - `check_environment.py` - Environment verification script
 - `.gitignore` - Git ignore patterns for Python projects
-- `GIT_SETUP.md` - Detailed Git setup and usage guide
-- `GITHUB_SETUP.md` - GitHub connection guide
-- `README.md` - This file
 
 ## Next Steps
 
@@ -168,4 +163,4 @@ This script will verify:
    ```
    - When prompted, use your GitHub username and a Personal Access Token (not password)
 
-See `PUSH_TO_GITHUB.md` for detailed push instructions and authentication help.
+**Authentication:** When pushing, use a Personal Access Token (not password). Create one at: https://github.com/settings/tokens
