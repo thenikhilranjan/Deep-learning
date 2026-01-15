@@ -148,23 +148,24 @@ This script will verify:
 
 ## Connect to GitHub
 
-### Quick Setup
+✅ **GitHub remote configured!**
+- **Username:** `thenikhilranjan`
+- **Repository:** `cursior`
+- **Remote URL:** `https://github.com/thenikhilranjan/cursior.git`
 
-Run the interactive script to connect your repository to GitHub:
-```bash
-bash connect_github.sh
-```
+### Next Steps to Push
 
-### Manual Connection
+1. **Create the repository on GitHub:**
+   - Go to: https://github.com/new
+   - Repository name: `cursior`
+   - Choose Public or Private
+   - **Don't** initialize with README
+   - Click "Create repository"
 
-1. **Create a repository on GitHub** at https://github.com/new
-2. **Add the remote:**
-   ```bash
-   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-   ```
-3. **Push your code:**
+2. **Push your code:**
    ```bash
    git push -u origin main
    ```
+   - When prompted, use your GitHub username and a Personal Access Token (not password)
 
-See `GITHUB_SETUP.md` for detailed instructions and troubleshooting.
+See `PUSH_TO_GITHUB.md` for detailed push instructions and authentication help.
