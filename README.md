@@ -6,10 +6,10 @@
 - Python 3 (located at `/usr/bin/python3`)
 - Git (version 2.50.1) - ✅ Repository initialized
 - Git repository initialized with initial commit
+- Virtual environment (`venv`) created and dependencies installed
 
 ### ⚠️ Needs Installation
 - Xcode Command Line Tools (required for Python, pip, and other development tools)
-- pip (Python package manager)
 - Homebrew (optional, but recommended package manager for macOS)
 
 ### ⚠️ Needs Configuration
@@ -34,28 +34,46 @@ python3 --version
 python3 -c "import sys; print(sys.version)"
 ```
 
-### 3. Install/Upgrade pip
+### 3. Quick Setup (Recommended)
 
+Run the automated setup script:
 ```bash
-python3 -m ensurepip --upgrade
-# or
-python3 -m pip install --upgrade pip
+bash setup.sh
 ```
 
-### 4. Install Python Dependencies
+This will:
+- Check your Python installation
+- Create a virtual environment (`venv`)
+- Install all Python dependencies from `requirements.txt`
+- Verify Git installation
 
-```bash
-pip3 install -r requirements.txt
-```
+### 4. Manual Setup
+
+If you prefer manual setup:
+
+1. Create virtual environment:
+   ```bash
+   python3 -m venv venv
+   ```
+
+2. Activate virtual environment:
+   ```bash
+   source venv/bin/activate
+   ```
+
+3. Upgrade pip:
+   ```bash
+   pip install --upgrade pip
+   ```
+
+4. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ### 5. Configure Git
 
 Git is already installed and the repository is initialized! However, you should configure your identity:
-
-**Quick setup:**
-```bash
-bash setup_git.sh
-```
 
 **Manual configuration:**
 ```bash
@@ -75,31 +93,37 @@ Homebrew is a useful package manager for macOS:
 ## Project Structure
 
 This workspace is set up for Python development with:
-- Unit testing support (pytest)
+- Unit testing support (pytest, pytest-cov)
 - Code quality tools (black, flake8, pylint)
 - Type checking (mypy)
 - Development utilities (ipython, ipdb)
 
-## Quick Setup
+## Working with the Virtual Environment
 
-### Automated Setup Script
+**Important:** Always activate the virtual environment before working on this project:
 
-Run the setup script to automatically check and install dependencies:
 ```bash
-bash setup.sh
+source venv/bin/activate
 ```
 
-### Manual Setup
+When activated, you'll see `(venv)` in your terminal prompt.
 
-1. Install Xcode Command Line Tools (see above)
-2. Install Python dependencies: `pip3 install -r requirements.txt`
-3. Start coding!
+To deactivate:
+```bash
+deactivate
+```
 
 ## Environment Check
 
 Check your development environment status:
 ```bash
 python3 check_environment.py
+```
+
+Or with the virtual environment activated:
+```bash
+source venv/bin/activate
+python check_environment.py
 ```
 
 This script will verify:
@@ -114,32 +138,33 @@ This script will verify:
 - `setup.sh` - Automated setup script for Python environment
 - `check_environment.py` - Environment verification script
 - `.gitignore` - Git ignore patterns for Python projects
+- `venv/` - Virtual environment directory (gitignored)
 
 ## Next Steps
 
-1. **Configure Git identity** (recommended):
+1. **Activate virtual environment:**
    ```bash
-   bash setup_git.sh
+   source venv/bin/activate
    ```
-   Or manually:
+
+2. **Configure Git identity** (recommended):
    ```bash
    git config --global user.name "Your Name"
    git config --global user.email "your.email@example.com"
    ```
 
-2. **Install Xcode Command Line Tools**: `xcode-select --install`
+3. **Verify environment:**
+   ```bash
+   python check_environment.py
+   ```
 
-3. **Run Python setup script**: `bash setup.sh`
-
-4. **Verify environment**: `python3 check_environment.py`
-
-5. **Start coding!**
+4. **Start coding!**
 
 ## Git Repository Status
 
 ✅ Git repository initialized  
 ✅ Initial commit created  
-⚠️  Git user identity needs to be configured (run `bash setup_git.sh`)
+⚠️  Git user identity needs to be configured
 
 ## Connect to GitHub
 

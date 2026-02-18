@@ -31,14 +31,27 @@ else
     python3 -m ensurepip --upgrade
 fi
 
-# Upgrade pip
+# Create virtual environment if it doesn't exist
+if [ ! -d "venv" ]; then
+    echo "📦 Creating virtual environment..."
+    python3 -m venv venv
+    echo "✅ Virtual environment created"
+else
+    echo "✅ Virtual environment already exists"
+fi
+
+# Activate virtual environment
+echo "🔌 Activating virtual environment..."
+source venv/bin/activate
+
+# Upgrade pip in virtual environment
 echo "📦 Upgrading pip..."
-python3 -m pip install --upgrade pip
+pip install --upgrade pip
 
 # Install Python dependencies
 if [ -f "requirements.txt" ]; then
     echo "📦 Installing Python dependencies from requirements.txt..."
-    pip3 install -r requirements.txt
+    pip install -r requirements.txt
     echo "✅ Dependencies installed"
 else
     echo "⚠️  requirements.txt not found"
@@ -55,6 +68,9 @@ echo ""
 echo "✨ Setup complete!"
 echo ""
 echo "Next steps:"
-echo "  1. If Xcode tools were missing, install them first"
-echo "  2. Run this script again: bash setup.sh"
+echo "  1. Activate the virtual environment: source venv/bin/activate"
+echo "  2. Run environment check: python3 check_environment.py"
 echo "  3. Start coding!"
+echo ""
+echo "Note: Remember to activate the virtual environment before working:"
+echo "      source venv/bin/activate"
