@@ -1,7 +1,10 @@
 __pycache__/
 .pytest_cache/
 
-datasets/
+# WiSARD is too large for GitHub; keep corpus locally. Track only this README.
+datasets/**
+!datasets/
+!datasets/README.md
 Assignment-3-PartB-YourName-YourID.txt
 
 artifacts/cache/*.json
