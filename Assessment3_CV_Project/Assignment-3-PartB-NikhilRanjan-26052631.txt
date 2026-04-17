@@ -1,0 +1,226 @@
+Assignment 3 Part B
+Database Details, Rough GUI Design, and Implementation/Development Plan
+
+Project Title:
+Drone-Assisted Wilderness Search and Rescue Using RGB-Thermal Human Detection
+
+Submitting Group Member:
+Nikhil Ranjan
+
+Student ID:
+26052631
+
+1. Project Overview
+
+The proposed project focuses on drone-assisted search and rescue in wilderness environments. The main aim is to detect missing persons from aerial imagery by combining RGB and thermal data. This topic is meaningful because rescue missions are time-critical, outdoor scenes are visually complex, and human targets can be very small or partially hidden by vegetation. A computer vision system that improves detection reliability can support faster decision-making and reduce the burden on human search teams.
+
+The main research question for the project is: does RGB-thermal fusion improve missing-person detection performance compared with RGB-only and thermal-only baselines? The project will also include image processing steps such as contrast enhancement, denoising, and thermal normalization to determine whether preprocessing improves model performance. A lightweight operator-facing GUI will be developed so that results can be reviewed in a practical and understandable way.
+
+2. Dataset Selection and Data Preparation
+
+The primary dataset selected for this project is the WiSARD dataset. It is suitable because it was designed for wilderness search and rescue scenarios and includes both visible and thermal imagery collected from UAV viewpoints. Based on the available project planning notes, the dataset contains 26,862 visual images, 29,989 thermal images, and 15,453 synchronized visual-thermal image pairs. This makes it appropriate for both single-modality experiments and multimodal fusion experiments.
+
+The backup dataset is SeaDronesSee. Although it is focused on maritime rescue rather than wilderness rescue, it still provides UAV-based search-and-rescue imagery and can be used if WiSARD download, annotation preparation, or synchronized pairing becomes difficult. The backup dataset protects the project timeline and helps ensure that the team can still complete the implementation and evaluation stages.
+
+The planned data preparation steps are:
+- inspect annotation format and convert labels into the format required by the chosen detection framework
+- organize the dataset into training, validation, and test splits
+- separate data by modality into RGB, thermal, and paired RGB-thermal folders
+- apply image preprocessing such as CLAHE, histogram equalization, thermal intensity normalization, and denoising
+- test resizing or image tiling strategies to improve small-object visibility
+
+The project will evaluate model performance using precision, recall, F1-score, and mAP. In addition to quantitative results, the team will review failure cases such as missed detections under tree cover, false positives on rocks or branches, and reduced visibility in low-light scenes.
+
+3. Database Details
+
+The project does not require a large enterprise database. A lightweight hybrid storage design is more appropriate. Images, videos, and annotation files will be stored on disk because media files are large and should not be inserted directly into a database. A local SQLite database will be used to store metadata, experiment records, inference outputs, and GUI logs. SQLite is suitable because it is simple, portable, easy to integrate with Python, and sufficient for a student project with a small number of users.
+
+Proposed storage design:
+- file system storage for raw images, thermal images, videos, labels, and exported visual results
+- SQLite database for metadata, experiment history, and detection summaries
+
+Proposed database tables:
+
+Table 1: media_files
+- media_id
+- file_path
+- dataset_name
+- modality (RGB, thermal, or paired)
+- split (train, validation, test, or demo)
+- width
+- height
+- paired_media_id
+
+Table 2: annotations
+- annotation_id
+- media_id
+- class_label
+- x_min
+- y_min
+- x_max
+- y_max
+- annotation_source
+
+Table 3: model_runs
+- run_id
+- model_name
+- modality
+- preprocessing_method
+- training_date
+- precision
+- recall
+- f1_score
+- map_score
+- notes
+
+Table 4: detections
+- detection_id
+- run_id
+- media_id
+- predicted_label
+- confidence_score
+- x_min
+- y_min
+- x_max
+- y_max
+- alert_level
+
+Table 5: export_logs
+- export_id
+- run_id
+- export_type
+- exported_file_path
+- export_time
+
+How the database will be used:
+- store information about uploaded images and videos used in the GUI
+- keep track of which model and preprocessing configuration produced each result
+- allow summary statistics and result history to be shown in the interface
+- support export of detection summaries for reporting and demonstration
+
+This database plan keeps the system manageable while still providing enough structure for experimentation, repeatability, and GUI integration.
+
+4. Rough GUI Design
+
+The GUI will be implemented as a lightweight rescue monitoring dashboard. A web-based interface built with Streamlit is the preferred option because it is faster to prototype than a full desktop GUI and integrates easily with Python, OpenCV, and deep learning inference code. The GUI will focus on clarity and usability rather than advanced visual styling.
+
+Main GUI screens:
+
+Screen 1: Input and Configuration
+- upload image, video, or selected demo sample
+- choose mode: RGB, thermal, or fusion
+- choose model: baseline detector or comparison model
+- enable or disable preprocessing options
+
+Screen 2: Detection Output
+- display original image or video frame
+- overlay bounding boxes on detected persons
+- show confidence scores
+- highlight high-priority detections
+
+Screen 3: Summary and Export
+- show total detections
+- show suspicious frames or strongest detections
+- display selected model, modality, and preprocessing used
+- export summary results for presentation and final report
+
+Rough wireframe:
+
++------------------------------------------------------------------+
+| Search and Rescue Detection Dashboard                            |
++------------------------------------------------------------------+
+| Upload Image/Video | Select Demo | Mode | Model | Preprocess | Run|
++------------------------------------------------------------------+
+| Input Preview                      | Detection Output            |
+|                                    | Bounding boxes and scores   |
+|                                    | Alert status                |
++------------------------------------------------------------------+
+| Detection Summary                                                   |
+| Total detections | Best confidence | Suspicious frames | Log view  |
++------------------------------------------------------------------+
+| Export Result | Save Screenshot | Clear Session                   |
++------------------------------------------------------------------+
+
+Expected GUI workflow:
+1. The user uploads an image or video, or loads a prepared demo sample.
+2. The user selects RGB, thermal, or fusion mode.
+3. The user chooses a trained model and optional preprocessing method.
+4. The system runs inference and displays detected persons with confidence values.
+5. The GUI stores the result summary and allows the user to export the output.
+
+This design is intentionally simple so that it can be completed within the project timeline while still demonstrating a practical end-to-end system.
+
+5. Implementation and Development Plan
+
+The development plan will be divided into six phases.
+
+Phase 1: Dataset Study and Project Setup
+- finalize the primary dataset and backup dataset
+- inspect label structure and paired image availability
+- create the folder structure and SQLite schema
+- prepare the Python environment and required libraries
+
+Phase 2: Preprocessing Pipeline
+- implement RGB preprocessing experiments such as CLAHE and gamma correction
+- implement thermal normalization and denoising
+- test resizing and tiling options for small-object detection
+- save before-and-after examples for analysis
+
+Phase 3: Baseline Model Development
+- train one RGB-only detection baseline
+- train one thermal-only detection baseline
+- evaluate both baselines using precision, recall, F1-score, and mAP
+- identify strengths and weaknesses of each modality
+
+Phase 4: Multimodal Fusion Development
+- align synchronized RGB-thermal image pairs
+- implement a simple fusion strategy such as late fusion or feature-level fusion
+- compare the fusion model against the single-modality baselines
+- record success cases and failure cases
+
+Phase 5: GUI and Database Integration
+- connect the trained model to the Streamlit dashboard
+- implement upload, inference, display, and export functions
+- log inference summaries in SQLite
+- test the usability of the interface with prerecorded examples
+
+Phase 6: Testing, Demo Preparation, and Final Report
+- prepare consistent demo samples that always run correctly
+- capture screenshots and comparison examples
+- write the final report and presentation material
+- review limitations, risks, and future improvements
+
+Indicative milestone plan:
+- Week 7: dataset review, project setup, database plan
+- Week 8: preprocessing pipeline and annotation preparation
+- Week 9: RGB and thermal baseline training
+- Week 10: fusion experiment and result comparison
+- Week 11: GUI implementation and integration
+- Week 12: testing, screenshots, presentation, and final documentation
+
+Suggested team responsibilities for a three-member group:
+- Member 1: dataset preparation, annotation conversion, preprocessing pipeline
+- Member 2: model training, evaluation metrics, result tables
+- Member 3: GUI implementation, database integration, and demo preparation
+
+All members should still understand the full system for oral explanation and final presentation.
+
+6. Risks and Mitigation
+
+Risk 1: Dataset download or preparation takes longer than expected.
+Mitigation: start with a smaller verified subset first and keep SeaDronesSee as a backup dataset.
+
+Risk 2: Multimodal fusion becomes too complex for the available time.
+Mitigation: complete RGB-only and thermal-only baselines first, then implement a simple late-fusion method before attempting more advanced fusion.
+
+Risk 3: Limited compute resources slow training.
+Mitigation: use resized images, smaller experiments, and a reduced number of architectures while preserving the baseline comparison.
+
+Risk 4: GUI inference is too slow during demonstration.
+Mitigation: prepare prerecorded samples, screenshots, and cached outputs to guarantee a stable demo.
+
+7. Expected Outcome
+
+The expected outcome of the project is a working prototype that can process UAV imagery, detect possible human targets in RGB and thermal scenes, compare single-modality and multimodal performance, and present the results through a simple operator-facing dashboard. The project is expected to show that thermal imagery can improve robustness in difficult visibility conditions and that fusion can provide stronger rescue-oriented performance than relying on only one modality.
+
+Overall, this plan is realistic for a student team because it starts from public datasets, limits the scope to a small number of meaningful experiments, uses a lightweight database design, and prioritizes a practical GUI that supports demonstration and evaluation.

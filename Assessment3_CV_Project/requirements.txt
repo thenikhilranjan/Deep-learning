@@ -1,0 +1,12 @@
+# Core application
+streamlit
+numpy
+pandas
+opencv-python
+Pillow
+
+# Model training / inference
+ultralytics
+
+# Verification
+pytest

@@ -1,0 +1,12 @@
+__pycache__/
+.pytest_cache/
+
+datasets/
+Assignment-3-PartB-YourName-YourID.txt
+
+artifacts/cache/*.json
+artifacts/cache/yolo_dataset/
+artifacts/db/*.sqlite3
+artifacts/exports/*
+artifacts/uploads/*
+artifacts/models/*
