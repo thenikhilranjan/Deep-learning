@@ -15,9 +15,14 @@ To support that goal, the project includes:
 - dataset validation
 - preprocessing tools
 - YOLO training preparation
-- an inference pipeline
-- a GUI dashboard
-- SQLite logging for results and history
+- an inference pipeline (in the `sar_vision` package)
+- a Streamlit GUI entry point (`app.py`)
+- SQLite logging for results and history (used when you run inference through `sar_vision` APIs or older dashboard-style flows)
+
+**How the repo is organized today**
+
+- **`sar_vision/`** holds the main engineering code: manifest generation, preprocessing, YOLO dataset export, optional classical/YOLO `DetectionService`, SQLite `DatabaseManager`, and tests.
+- **`app.py`** is the operator-facing **RescueVision** app: a focused interface that loads two Ultralytics YOLO weights (RGB and Thermal), lets the user pick one of three **Approaches** — *RGB only*, *Thermal only*, or *Multimodal (Late Fusion)* — and runs inference on uploaded **images, ZIPs of images, or videos**. The multimodal mode does not use a third checkpoint; it runs the RGB and Thermal models in parallel and fuses their predictions via the `LateFusionRunner` in [`sar_vision/inference/fusion.py`](sar_vision/inference/fusion.py).
 
 This guide is written so that someone new to the project can understand:
 
@@ -62,8 +67,8 @@ In simple terms, the system works like this:
 3. It builds a structured manifest of images, labels, and sequence details.
 4. It allows us to preview image preprocessing such as contrast enhancement and thermal normalization.
 5. It can prepare the dataset in YOLO format for training.
-6. It can run quick detections in the GUI.
-7. It stores reports and inference history in SQLite.
+6. The Streamlit app can run **YOLO-based** person detection on uploaded image or video using your saved `.pt` weights.
+7. When you use the `sar_vision` inference + storage path, reports and inference history can be stored in SQLite.
 
 So this is not only a notebook or only a report. It is a **working project structure** that can be used for experimentation and demonstration.
 
@@ -171,11 +176,13 @@ We reorganized it to make the project easier to manage.
 Now the folder is cleaner and structured into:
 
 - `sar_vision/` for source code
-- `datasets/` for data
-- `artifacts/` for outputs and generated files
+- `datasets/` for data (large WiSARD tree is local-only; see `datasets/README.md`)
+- `artifacts/` for outputs and generated files (including `artifacts/models/` for `.pt` weights such as `rgb_best_26s.pt` and `Thermal_yolo26m.pt`)
 - `tests/` for smoke tests
 - `docs/` for planning and setup notes
-- `notebooks/` for archived lab notebooks
+- `.streamlit/` for Streamlit theme/config
+
+Course **Part B** written deliverables (support markdown, `.txt`, `.docx`) were moved **outside** this folder to the parent directory next to `Assessment3_CV_Project` so the code project stays easy to navigate.
 
 ### Step 2: Add Dataset Validation
 
@@ -275,17 +282,16 @@ This matches the assignment idea of having database details, but keeps it lightw
 
 ### Step 8: Build the GUI
 
-The project GUI was built with **Streamlit**.
+The project GUI is **Streamlit**, implemented in [`app.py`](app.py) as **RescueVision**:
 
-The GUI was improved to look more polished and eye-catching using:
+- **Home**: short mission summary and three approach cards (RGB, Thermal, Multimodal late fusion).
+- **Model Setup**: edit and verify paths to the two YOLO checkpoints (defaults: `artifacts/models/rgb_best_26s.pt`, `artifacts/models/Thermal_yolo26m.pt`). Late fusion uses these two models together; there is no third file.
+- **Inference**: pick an **Approach** (RGB only / Thermal only / Multimodal Late Fusion).
+  - *RGB only / Thermal only*: upload **image or video**, set confidence and max frames, run detection.
+  - *Multimodal (Late Fusion)*: upload paired RGB-cropped and thermal inputs as a **ZIP** of images, **multiple image files**, or **two videos**. Frames are matched by the numeric id after the final `_` in the filename. RGB is resized to 1250 x 1000, thermal to 640 x 512, and fused detections are returned along with annotated thermal/RGB frames and YOLO label files, packaged into a downloadable ZIP.
+- **About**: one-page explanation for demos and marking.
 
-- a dark theme
-- orange/coral/teal accent colors
-- custom CSS styling
-- metric cards
-- charts
-- styled panels
-- export buttons
+Styling uses a dark “mission console” layout with custom CSS for readability and spacing.
 
 ---
 
@@ -299,12 +305,12 @@ The GUI was improved to look more polished and eye-catching using:
 
 - `streamlit` for the GUI
 - `numpy` for array operations
-- `pandas` for tables and summaries
-- `opencv-python` for image handling and preprocessing
+- `pandas` for tables and summaries (used in `app.py` for detection tables)
+- `opencv-python` for image handling, video frame IO, and preprocessing in `sar_vision`
 - `Pillow` for safe image metadata loading
-- `altair` for charts in the GUI
-- `sqlite3` for local database storage
-- `ultralytics` for YOLO training/inference support
+- `altair` is listed in dependencies for optional charting; the current `app.py` does not depend on it
+- `sqlite3` for local database storage when using `sar_vision.storage`
+- `ultralytics` for YOLO training and inference (required for `app.py` and `YoloTrainingManager`)
 - `pytest` for smoke testing
 
 ### Why These Technologies Were Chosen
@@ -323,29 +329,21 @@ Here is the important structure of the project:
 
 ```text
 Assessment3_CV_Project/
-├── app.py
+├── app.py                 # RescueVision Streamlit UI (YOLO image/video)
 ├── README.md
 ├── PROJECT_GUIDE.md
 ├── requirements.txt
-├── datasets/
+├── .streamlit/
+├── datasets/              # WiSARD root (local); tracked README only in git
 ├── artifacts/
-│   ├── cache/
+│   ├── cache/               # manifest, summary, yolo_dataset (generated)
 │   ├── db/
 │   ├── exports/
 │   ├── uploads/
-│   └── models/
-├── sar_vision/
-│   ├── config.py
-│   ├── data/
-│   ├── preprocessing/
-│   ├── training/
-│   ├── inference/
-│   ├── storage/
-│   └── ui/
+│   └── models/              # e.g. rgb_best_26s.pt, Thermal_yolo26m.pt
+├── sar_vision/              # core library (validator, training prep, inference service, DB)
 ├── tests/
-├── docs/
-├── notebooks/
-└── archive/
+└── docs/
 ```
 
 ### Important Folders Explained
@@ -354,7 +352,7 @@ Assessment3_CV_Project/
 - `artifacts/cache/`: dataset manifest and summary files
 - `artifacts/db/`: SQLite database
 - `artifacts/exports/`: exported annotated images and outputs
-- `artifacts/models/`: trained model weights can be placed here
+- `artifacts/models/`: trained model weights (defaults: `rgb_best_26s.pt`, `Thermal_yolo26m.pt`)
 - `sar_vision/`: actual project source code
 - `tests/`: smoke tests to verify the core system
 
@@ -366,85 +364,49 @@ The GUI is one of the most important parts of this project because the assignmen
 
 ### GUI Theme
 
-The dashboard uses:
+RescueVision uses:
 
-- a dark rescue-operations theme
-- bright orange/coral action buttons
-- teal and warm highlight colors
-- styled metric cards
-- charts for quick understanding
-- clean spacing and readable layout
+- a dark navy/slate background with high-contrast text
+- card-style panels and a hero header on Home
+- sidebar navigation
+- progress feedback for long video runs
 
-### GUI Pages
+### GUI Pages (current `app.py`)
 
-#### 1. Overview
+#### 1. Home
 
-This page gives the high-level project summary:
+- mission-style title and short description
+- three cards describing the RGB, Thermal, and Multimodal late-fusion approaches
+- numbered workflow for first-time users
 
-- total sequences
-- total images
-- total labels
-- matched pairs
-- modality coverage chart
-- assignment alignment summary
-- current dataset issues
+#### 2. Model Setup
 
-#### 2. Dataset Status
+- two text fields for the RGB and Thermal model file paths
+- per-model “found / not found” feedback
+- progress bar for how many of the two paths resolve to real files
+- caption explaining that the multimodal approach reuses these two models via late fusion
 
-This page focuses on the dataset itself:
+#### 3. Inference
 
-- refresh dataset manifest
-- filter sequences by modality
-- filter sequences by health state
-- inspect sequence-level issues
-- build YOLO workspace
-- export sequence summary CSV
+- top-level **Approach** selector: *RGB only*, *Thermal only*, *Multimodal (Late Fusion)*
+- *RGB only / Thermal only*: image vs video, confidence, max video frames, file upload; side-by-side preview, detection table, PNG/CSV/MP4 downloads
+- *Multimodal (Late Fusion)*: input type *Images* (ZIP or multiple files per modality) or *Videos* (one RGB video + one thermal video); advanced sliders for RGB / Thermal confidence and fusion IoU; results show KPI cards, thermal/RGB galleries, label previews, and a single ZIP download of the fused output folder
 
-#### 3. Preprocessing Lab
+#### 4. About
 
-This page is for image enhancement experiments:
+- short bullet summary for presentations and Part B explanation
 
-- choose a dataset image, sample asset, or uploaded image
-- apply thermal normalization
-- apply CLAHE
-- apply denoising
-- resize or convert to grayscale
-- compare original and processed images
-- inspect intensity profile
-- export the processed image
+### Relationship to `sar_vision`
 
-#### 4. Inference Demo
-
-This page is for quick detection testing:
-
-- select image source
-- choose modality
-- choose backend
-- use classical hotspot detection or YOLO weights
-- adjust thresholds
-- view annotated result
-- view detections in a table
-- export annotated image
-- export detections CSV
-
-#### 5. Run History
-
-This page shows saved results:
-
-- dataset validation history
-- inference run history
-- backend usage chart
-- export run history as CSV
+Dataset validation, preprocessing previews, YOLO workspace export, classical hotspot fallback, the late-fusion runner (`LateFusionRunner` in [`sar_vision/inference/fusion.py`](sar_vision/inference/fusion.py)), and SQLite run logging are implemented in **`sar_vision/`** and documented in this guide and [`README.md`](README.md). You can run the validator from the command line and use `YoloTrainingManager`, `DetectionService`, or `LateFusionRunner` from Python or notebooks. The current Streamlit `app.py` is intentionally streamlined for **trained YOLO demo inference** with two single-modality weights plus a late-fusion option.
 
 ### GUI Purpose
 
-The GUI is not only for looks. It helps demonstrate:
+The GUI demonstrates:
 
-- dataset understanding
-- preprocessing effects
-- result visualization
-- experiment repeatability
-- export/logging ability
+- practical operator workflow (configure models, upload media, run, export)
+- multimodal model comparison at the UI level (which weight file you select)
+- clear outputs suitable for screenshots in reports
 
 This makes it a strong fit for the assignment requirement.
 
@@ -550,14 +512,16 @@ This creates:
 
 ### Step 5: Launch the GUI
 
+From the project folder (use your own venv or `python3 -m pip install -r requirements.txt` as needed):
+
 ```bash
-streamlit run app.py --server.port 8502
+python3 -m streamlit run app.py --server.port 8501
 ```
 
 Then open:
 
 ```text
-http://localhost:8502
+http://localhost:8501
 ```
 
 ### Step 6: Run Tests
@@ -572,7 +536,7 @@ pytest tests -q
 
 The project already includes YOLO workspace preparation.
 
-You can do it from the GUI or from Python.
+Do this from **Python** (or your own notebook) using `YoloTrainingManager`. The current `app.py` does not include the older multi-page “Dataset Status / YOLO workspace” UI.
 
 ### Python Example
 
@@ -636,7 +600,7 @@ This is recommended because:
 3. Activate the virtual environment.
 4. Install dependencies with `pip install -r requirements.txt`.
 5. Run `python -m sar_vision.data.validator`.
-6. Launch with `streamlit run app.py --server.port 8502`.
+6. Launch with `python3 -m streamlit run app.py --server.port 8501` (or another free port).
 
 ### Optional Remote Deployment
 
@@ -660,10 +624,9 @@ The following parts are already working:
 - YOLO-format label parsing
 - preprocessing tools
 - YOLO dataset workspace generation
-- Streamlit GUI
-- SQLite logging
-- export buttons for images and CSV files
-- smoke tests
+- **RescueVision** Streamlit GUI (`app.py`): three-model paths, image/video YOLO inference, downloads
+- SQLite logging and classical/YOLO `DetectionService` when using `sar_vision` APIs (not required for the minimal `app.py` path)
+- smoke tests for core `sar_vision` modules
 
 ### Current Verification Status
 
@@ -674,7 +637,7 @@ The project has already been tested with:
 - live Streamlit startup checks
 - browser-based GUI walkthroughs
 
-The current test suite passes successfully.
+Run `pytest tests -q` after dependency and dataset path changes to confirm everything still passes.
 
 ---
 
@@ -727,8 +690,8 @@ This project is a **search and rescue computer vision system** built around the 
 - dataset validation
 - preprocessing
 - YOLO training preparation
-- inference
-- SQLite-based logging
-- an attractive Streamlit GUI
+- inference (library + optional classical fallback)
+- SQLite-based logging when using the storage layer
+- a Streamlit **RescueVision** GUI for demonstrating three YOLO checkpoints on image and video
 
 The project is already understandable, runnable, and demonstrable. It also has a clear path for future improvement, especially for trained model baselines and RGB-thermal fusion experiments.

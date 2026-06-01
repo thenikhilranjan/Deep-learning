@@ -1,71 +1,57 @@
 # Assessment 3 Search and Rescue Vision
 
-This project implements the Assignment 3 computer vision system for drone-assisted wilderness search and rescue using WiSARD data. The current build includes dataset validation, preprocessing utilities, YOLO dataset preparation, a Streamlit dashboard, SQLite-backed run history, and a classical thermal fallback detector for quick demos before trained weights are available.
+Computer vision coursework project for drone-assisted wilderness search and rescue using **WiSARD** data. The repo combines a Python package (`sar_vision`) for dataset validation, preprocessing, YOLO dataset export, and inference, with a focused Streamlit app (`app.py`, **RescueVision**) for running RGB-only, Thermal-only, or **late-fusion** person detection on uploaded **images, ZIPs of images, or videos**.
 
-## Project Layout
+Long-form documentation: [PROJECT_GUIDE.md](PROJECT_GUIDE.md).
 
-- `app.py`: Streamlit dashboard entrypoint
-- `sar_vision/`: core package for data validation, preprocessing, training prep, inference, storage, and UI helpers
-- `datasets/`: raw WiSARD dataset files
-- `artifacts/`: generated manifests, database, exports, uploads, and model outputs
-- `docs/`: planning notes and setup references moved out of the main root
-- `notebooks/`: archived course lab notebooks
+## Project layout
 
-## What The App Does
-
-- scans the local `datasets/` folder and generates a manifest at `artifacts/cache/dataset_manifest.json`
-- reports missing image/label pairs and modality breakdown
-- previews preprocessing such as thermal normalization, CLAHE, denoising, grayscale conversion, and resizing
-- runs inference using either:
-  - a classical thermal hotspot detector available immediately
-  - a YOLO model if `.pt` weights are added under `artifacts/models/`
-- logs dataset reports and inference runs to `artifacts/db/sar_vision.sqlite3`
-- prepares YOLO-ready train/val/test workspaces from the validated manifest
+- `app.py` — RescueVision Streamlit UI (RGB / Thermal / Multimodal late fusion, inference, downloads)
+- `sar_vision/` — core library (validator, manifest, preprocessing, YOLO prep, inference service, **late-fusion runner**, storage, UI helpers)
+- `sar_vision/inference/fusion.py` — `LateFusionRunner` used by the Multimodal page
+- `datasets/` — local WiSARD root (large; see `datasets/README.md`; corpus is gitignored except that README)
+- `artifacts/` — generated manifests, optional DB/exports/uploads, **`artifacts/models/`** for `.pt` weights (e.g. `rgb_best_26s.pt`, `Thermal_yolo26m.pt`)
+- `tests/` — `pytest` smoke tests
+- `docs/` — planning and setup notes
 
 ## Setup
 
-1. Activate the project virtual environment.
+```bash
+cd /path/to/Assessment3_CV_Project
+python3 -m pip install -r requirements.txt
+```
+
+If you use a venv at repo parent (e.g. `Cursor/venv`):
 
 ```bash
 source ../venv/bin/activate
-```
-
-2. Install project dependencies.
-
-```bash
 pip install -r requirements.txt
 ```
 
-## Validate The Dataset
-
-Run the validator whenever the dataset changes:
+## Validate the dataset
 
 ```bash
-python -m sar_vision.data.validator
+python3 -m sar_vision.data.validator
 ```
 
-This writes:
+Writes (when not gitignored locally):
 
 - `artifacts/cache/dataset_manifest.json`
 - `artifacts/cache/dataset_summary.json`
 
-## Launch The Dashboard
+## Launch the app
 
 ```bash
-streamlit run app.py --server.port 8502
+python3 -m streamlit run app.py --server.port 8501
 ```
 
-Main pages:
+Open `http://localhost:8501`. Use **Model Setup** to point at your two checkpoints (RGB `rgb_best_26s.pt` and Thermal `Thermal_yolo26m.pt`), then go to **Inference** and choose one of:
 
-- `Overview`: dataset totals and current issues
-- `Dataset Status`: sequence summaries and YOLO workspace preparation
-- `Preprocessing Lab`: compare original and processed images
-- `Inference Demo`: run hotspot or YOLO inference and log the result
-- `Run History`: inspect saved dataset reports and inference runs
+- **RGB only** — upload an RGB image or video.
+- **Thermal only** — upload a thermal image or video.
+- **Multimodal (Late Fusion)** — upload paired RGB-cropped + thermal inputs (ZIP of images, multiple files, or two videos). The app pairs frames by the numeric id after the final underscore in each filename (e.g. `abc_rgb_000001.jpg` and `xyz_thermal_001.jpg` both match frame 1), resizes RGB to 1250 x 1000 and thermal to 640 x 512, runs both YOLO models, and fuses the predictions by IoU.
 
-## Prepare A YOLO Workspace
-
-You can create a YOLO dataset split from the dashboard, or from Python:
+## Prepare a YOLO workspace (Python)
 
 ```python
 from sar_vision.training import YoloTrainingManager
@@ -75,21 +61,10 @@ data_yaml = manager.prepare_dataset(modality="thermal")
 print(data_yaml)
 ```
 
-This produces a YOLO-ready folder under `artifacts/cache/yolo_dataset/<modality>/`.
+Output under `artifacts/cache/yolo_dataset/<modality>/` including `data.yaml`. `paired` multimodal export is not implemented in this manager.
 
-## Notes On Training
-
-- The current labels are already in YOLO format.
-- `paired` fusion training is intentionally not exported as a standard YOLO dataset yet.
-- If you want to train with Ultralytics, place the dataset locally and install `ultralytics` from `requirements.txt`.
-- If no model weights are available, the app still works using the classical thermal hotspot detector.
-
-## Run Tests
+## Run tests
 
 ```bash
 pytest tests -q
 ```
-
-## Current Local Dataset Snapshot
-
-The validator currently detects a large local WiSARD dataset and writes the latest summary into `artifacts/cache/dataset_summary.json`. That summary is the source of truth for what is currently available on disk.
